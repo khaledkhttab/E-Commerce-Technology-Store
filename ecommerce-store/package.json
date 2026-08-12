@@ -1,0 +1,20 @@
+{
+  "name": "ecommerce-store",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@prisma/client": "^7.9.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "prisma": "^7.9.1"
+  }
+}
