@@ -1,0 +1,255 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  CUSTOMER
+  ADMIN
+  SUPER_ADMIN
+}
+
+model User {
+  id                   Int                  @id @default(autoincrement())
+  name                 String
+  role                 UserRole
+  email                String               @unique
+  password             String
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  cart                 Cart?
+  orders               Order[]
+  orderStatusHistories OrderStatusHistory[]
+  reviews              Review[]
+}
+
+enum CategoryType {
+  LAPTOP
+  SMARTPHONE
+  TABLET
+  MONITOR
+  PC_COMPONENT
+  ACCESSORY
+  OTHER
+}
+
+model Category {
+  id   Int          @id @default(autoincrement())
+  name String       @unique
+  type CategoryType
+
+  products ProductCategory[]
+}
+
+model Brand {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  products Product[]
+}
+
+model Product {
+  id            Int      @id @default(autoincrement())
+  name          String
+  description   String
+  price         Decimal
+  stockQuantity Int
+  image         String
+  brandId       Int
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  brand Brand @relation(fields: [brandId], references: [id])
+
+  categories ProductCategory[]
+
+  specifications ProductSpecification[]
+
+  keywords ProductKeyword[]
+
+  cartItems CartItem[]
+
+  orderItems OrderItem[]
+
+  reviews Review[]
+
+  discounts Discount[]
+}
+
+model Discount {
+  id        Int      @id @default(autoincrement())
+  value     Decimal
+  startDate DateTime
+  endDate   DateTime
+
+  productId Int
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model ProductSpecification {
+  id        Int     @id @default(autoincrement())
+  productId Int
+  name      String
+  value     String
+  product   Product @relation(fields: [productId], references: [id])
+}
+
+model Keyword {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+
+  products ProductKeyword[]
+}
+
+model ProductKeyword {
+  productId Int
+  keywordId Int
+
+  product Product @relation(fields: [productId], references: [id])
+  keyword Keyword @relation(fields: [keywordId], references: [id])
+
+  @@id([productId, keywordId])
+}
+
+model Cart {
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  items CartItem[]
+}
+
+model CartItem {
+  id        Int @id @default(autoincrement())
+  cartId    Int
+  productId Int
+  quantity  Int
+
+  cart    Cart    @relation(fields: [cartId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([cartId, productId])
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  orderNumber String      @unique
+  userId      Int
+  status      OrderStatus @default(PENDING)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  items         OrderItem[]
+  payment       Payment?
+  statusHistory OrderStatusHistory[]
+}
+
+model OrderItem {
+  id          Int     @id @default(autoincrement())
+  orderId     Int
+  productId   Int
+  productName String
+  unitPrice   Decimal
+  quantity    Int
+  discount    Decimal
+  subtotal    Decimal
+
+  order   Order   @relation(fields: [orderId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  BANK_TRANSFER
+}
+
+enum PaymentStatus {
+  PENDING
+  PENDING_VERIFICATION
+  VERIFIED
+  REJECTED
+}
+
+model Payment {
+  id            Int           @id @default(autoincrement())
+  orderId       Int           @unique
+  paymentMethod PaymentMethod
+  paymentStatus PaymentStatus
+  paidAt        DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  order Order         @relation(fields: [orderId], references: [id])
+  proof PaymentProof?
+}
+
+model PaymentProof {
+  id            Int      @id @default(autoincrement())
+  paymentId     Int      @unique
+  proofImageUrl String
+  uploadedAt    DateTime @default(now())
+
+  payment Payment @relation(fields: [paymentId], references: [id])
+}
+
+model OrderStatusHistory {
+  id        Int         @id @default(autoincrement())
+  orderId   Int
+  adminId   Int
+  status    OrderStatus
+  changedAt DateTime    @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+  admin User  @relation(fields: [adminId], references: [id])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User    @relation(fields: [userId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+
+  @@unique([userId, productId])
+}
+
+model ProductCategory {
+  productId  Int
+  categoryId Int
+
+  product  Product  @relation(fields: [productId], references: [id])
+  category Category @relation(fields: [categoryId], references: [id])
+
+  @@id([productId, categoryId])
+}
+
