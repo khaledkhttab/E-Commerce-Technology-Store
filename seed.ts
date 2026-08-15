@@ -279,26 +279,36 @@ async function main() {
     const month = String(baseDate.getUTCMonth() + 1).padStart(2, "0");
     const year = String(baseDate.getUTCFullYear()).slice(-2);
 
-    return {
-      orderNumber: `ORD_${year}-${month}-${day}_${String(i + 1).padStart(6, "0")}`,
-      userId: customers[i % customers.length].id,
-      status: [
-        "PENDING",
-        "CONFIRMED",
-        "PROCESSING",
-        "SHIPPED",
-        "DELIVERED",
-        "CANCELLED",
-      ][i % 6] as
-        | "PENDING"
-        | "CONFIRMED"
-        | "PROCESSING"
-        | "SHIPPED"
-        | "DELIVERED"
-        | "CANCELLED",
-      createdAt: new Date(baseDate.getTime() - i * 3600000),
-      updatedAt: new Date(baseDate.getTime() - i * 1800000),
-    };
+   return {
+  orderNumber: `ORD_${year}-${month}-${day}_${String(i + 1).padStart(6, "0")}`,
+  userId: customers[i % customers.length].id,
+
+  customerEmail: customers[i % customers.length].email,
+  shippingAddress: `Test Shipping Address ${i + 1}`,
+  phoneNumber: `01000000${String(i + 1).padStart(3, "0")}`,
+  backupPhone:
+    i % 2 === 0
+      ? `01100000${String(i + 1).padStart(3, "0")}`
+      : null,
+
+  status: [
+    "PENDING",
+    "CONFIRMED",
+    "PROCESSING",
+    "SHIPPED",
+    "DELIVERED",
+    "CANCELLED",
+  ][i % 6] as
+    | "PENDING"
+    | "CONFIRMED"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "DELIVERED"
+    | "CANCELLED",
+
+  createdAt: new Date(baseDate.getTime() - i * 3600000),
+  updatedAt: new Date(baseDate.getTime() - i * 1800000),
+};
   });
 
   const orders = await prisma.order.createManyAndReturn({

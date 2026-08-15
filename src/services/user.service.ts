@@ -8,32 +8,48 @@ export class UserService {
   }
 
   async createUser(data: any) {
-    if (!data.name || typeof data.name !== "string") {
+    if (
+      !data.name ||
+      typeof data.name !== "string"
+    ) {
       throw new Error("User name is required");
     }
 
     const name = data.name.trim();
 
     if (!name) {
-      throw new Error("User name cannot be empty");
+      throw new Error(
+        "User name cannot be empty"
+      );
     }
 
-    if (!data.email || typeof data.email !== "string") {
+    if (
+      !data.email ||
+      typeof data.email !== "string"
+    ) {
       throw new Error("User email is required");
     }
 
-    const email = data.email.trim().toLowerCase();
+    const email =
+      data.email.trim().toLowerCase();
 
     if (!this.isValidEmail(email)) {
       throw new Error("Invalid email format");
     }
 
-    if (!data.password || typeof data.password !== "string") {
-      throw new Error("User password is required");
+    if (
+      !data.password ||
+      typeof data.password !== "string"
+    ) {
+      throw new Error(
+        "User password is required"
+      );
     }
 
     if (!data.password.trim()) {
-      throw new Error("User password cannot be empty");
+      throw new Error(
+        "User password cannot be empty"
+      );
     }
 
     if (!data.role) {
@@ -51,7 +67,9 @@ export class UserService {
     }
 
     const existingUser =
-      await this.userRepository.findByEmail(email);
+      await this.userRepository.findByEmail(
+        email
+      );
 
     if (existingUser) {
       throw new Error(
@@ -68,7 +86,10 @@ export class UserService {
   }
 
   async getUserById(id: number) {
-    if (!Number.isInteger(id) || id <= 0) {
+    if (
+      !Number.isInteger(id) ||
+      id <= 0
+    ) {
       throw new Error("Invalid user ID");
     }
 
@@ -86,8 +107,18 @@ export class UserService {
     return this.userRepository.findMany();
   }
 
-  async updateUser(id: number, data: any) {
-    if (!Number.isInteger(id) || id <= 0) {
+  async getAdmins() {
+    return this.userRepository.findAdmins();
+  }
+
+  async updateUser(
+    id: number,
+    data: any
+  ) {
+    if (
+      !Number.isInteger(id) ||
+      id <= 0
+    ) {
       throw new Error("Invalid user ID");
     }
 
@@ -112,13 +143,17 @@ export class UserService {
 
     if (data.name !== undefined) {
       if (typeof data.name !== "string") {
-        throw new Error("User name must be a string");
+        throw new Error(
+          "User name must be a string"
+        );
       }
 
       const name = data.name.trim();
 
       if (!name) {
-        throw new Error("User name cannot be empty");
+        throw new Error(
+          "User name cannot be empty"
+        );
       }
 
       updateData.name = name;
@@ -126,18 +161,25 @@ export class UserService {
 
     if (data.email !== undefined) {
       if (typeof data.email !== "string") {
-        throw new Error("User email must be a string");
+        throw new Error(
+          "User email must be a string"
+        );
       }
 
-      const email = data.email.trim().toLowerCase();
+      const email =
+        data.email.trim().toLowerCase();
 
       if (!this.isValidEmail(email)) {
-        throw new Error("Invalid email format");
+        throw new Error(
+          "Invalid email format"
+        );
       }
 
       if (email !== user.email) {
         const existingUser =
-          await this.userRepository.findByEmail(email);
+          await this.userRepository.findByEmail(
+            email
+          );
 
         if (
           existingUser &&
@@ -160,7 +202,9 @@ export class UserService {
       ];
 
       if (!validRoles.includes(data.role)) {
-        throw new Error("Invalid user role");
+        throw new Error(
+          "Invalid user role"
+        );
       }
 
       updateData.role = data.role;
@@ -172,7 +216,70 @@ export class UserService {
     );
   }
 
-  private isValidEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  async demoteAdmin(
+    id: number,
+    requesterId: number
+  ) {
+    if (
+      !Number.isInteger(id) ||
+      id <= 0
+    ) {
+      throw new Error("Invalid user ID");
+    }
+
+    if (
+      !Number.isInteger(requesterId) ||
+      requesterId <= 0
+    ) {
+      throw new Error(
+        "Invalid requester ID"
+      );
+    }
+
+    if (id === requesterId) {
+      throw new Error(
+        "Super admin cannot demote themselves"
+      );
+    }
+
+    const user =
+      await this.userRepository.findById(id);
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    if (user.role !== "ADMIN") {
+      throw new Error(
+        "User is not an admin"
+      );
+    }
+
+    const requester =
+      await this.userRepository.findById(
+        requesterId
+      );
+
+    if (!requester) {
+      throw new Error(
+        "Requester not found"
+      );
+    }
+
+    if (requester.role !== "SUPER_ADMIN") {
+      throw new Error(
+        "Only super admin can demote admins"
+      );
+    }
+
+    return this.userRepository.demoteAdmin(id);
+  }
+
+  private isValidEmail(
+    email: string
+  ) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      email
+    );
   }
 }

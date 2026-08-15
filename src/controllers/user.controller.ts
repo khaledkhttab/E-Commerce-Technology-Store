@@ -62,6 +62,23 @@ export class UserController {
     }
   };
 
+  getAdmins = async (
+    req: Request,
+    res: Response
+  ) => {
+    try {
+      const users =
+        await this.userService.getAdmins();
+
+      return res.status(200).json({
+        success: true,
+        data: UserResponse.fromUsers(users),
+      });
+    } catch (error: any) {
+      return this.handleError(res, error);
+    }
+  };
+
   updateUser = async (
     req: Request,
     res: Response
@@ -84,6 +101,33 @@ export class UserController {
     }
   };
 
+  demoteAdmin = async (
+    req: Request,
+    res: Response
+  ) => {
+    try {
+      const id = Number(req.params.id);
+      const requesterId = Number(
+        req.body.requesterId
+      );
+
+      const user =
+        await this.userService.demoteAdmin(
+          id,
+          requesterId
+        );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Admin demoted to customer successfully",
+        data: UserResponse.fromUser(user),
+      });
+    } catch (error: any) {
+      return this.handleError(res, error);
+    }
+  };
+
   private handleError(
     res: Response,
     error: any
@@ -93,7 +137,10 @@ export class UserController {
         ? error.message
         : "Internal server error";
 
-    if (message === "User not found") {
+    if (
+      message === "User not found" ||
+      message === "Requester not found"
+    ) {
       return res.status(404).json({
         success: false,
         message,
@@ -105,6 +152,19 @@ export class UserController {
       "User with this email already exists"
     ) {
       return res.status(409).json({
+        success: false,
+        message,
+      });
+    }
+
+    if (
+      message ===
+        "Only super admin can demote admins" ||
+      message ===
+        "Super admin cannot demote themselves" ||
+      message === "User is not an admin"
+    ) {
+      return res.status(403).json({
         success: false,
         message,
       });

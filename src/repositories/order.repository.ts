@@ -5,7 +5,11 @@ export class OrderRepository {
     userId: number,
     orderNumber: string,
     items: any[],
-    total: number
+    total: number,
+    customerEmail: string,
+    phoneNumber: string,
+    backupPhone: string | null,
+    shippingAddress: string
   ) {
     return prisma.$transaction(async (tx) => {
       const order = await tx.order.create({
@@ -13,6 +17,11 @@ export class OrderRepository {
           userId,
           orderNumber,
           status: "PENDING",
+
+          customerEmail,
+          phoneNumber,
+          backupPhone,
+          shippingAddress,
         },
       });
 

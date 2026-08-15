@@ -30,6 +30,9 @@ model User {
   orders               Order[]
   orderStatusHistories OrderStatusHistory[]
   reviews              Review[]
+
+  adminApplications    AdminApplication[] @relation("Applicant")
+reviewedApplications AdminApplication[] @relation("Reviewer")
 }
 
 enum CategoryType {
@@ -158,6 +161,12 @@ model Order {
   id          Int         @id @default(autoincrement())
   orderNumber String      @unique
   userId      Int
+
+customerEmail   String
+shippingAddress String
+phoneNumber     String
+backupPhone     String?
+
   status      OrderStatus @default(PENDING)
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -253,3 +262,28 @@ model ProductCategory {
   @@id([productId, categoryId])
 }
 
+
+enum AdminApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model AdminApplication {
+  id Int @id @default(autoincrement())
+
+  userId Int
+
+  status AdminApplicationStatus @default(PENDING)
+
+  reviewedBy Int?
+  reviewedAt DateTime?
+
+  rejectionReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  applicant User  @relation("Applicant", fields: [userId], references: [id])
+  reviewer  User? @relation("Reviewer", fields: [reviewedBy], references: [id])
+}

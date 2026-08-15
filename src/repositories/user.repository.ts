@@ -38,4 +38,29 @@ export class UserRepository {
       data,
     });
   }
+
+async findAdmins() {
+  return prisma.user.findMany({
+    where: {
+      role: {
+        in: ["ADMIN", "SUPER_ADMIN"],
+      },
+    },
+    orderBy: {
+      id: "asc",
+    },
+  });
 }
+
+async demoteAdmin(id: number) {
+  return prisma.user.update({
+    where: {
+      id,
+    },
+    data: {
+      role: "CUSTOMER",
+    },
+  });
+}
+}
+

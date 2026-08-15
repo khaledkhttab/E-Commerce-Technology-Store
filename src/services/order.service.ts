@@ -9,6 +9,10 @@ export class OrderService {
   }
 
   async createOrder(data: any) {
+    // =========================
+    // USER VALIDATION
+    // =========================
+
     if (!data.userId) {
       throw new Error("User ID is required");
     }
@@ -17,6 +21,76 @@ export class OrderService {
       throw new Error("Invalid user ID");
     }
 
+    // =========================
+    // CUSTOMER CONTACT INFO
+    // =========================
+
+    if (
+      !data.customerEmail ||
+      typeof data.customerEmail !== "string"
+    ) {
+      throw new Error("Customer email is required");
+    }
+
+    const customerEmail = data.customerEmail
+      .trim()
+      .toLowerCase();
+
+    if (!customerEmail) {
+      throw new Error("Customer email cannot be empty");
+    }
+
+    if (!this.isValidEmail(customerEmail)) {
+      throw new Error("Invalid customer email format");
+    }
+
+    if (
+      !data.phoneNumber ||
+      typeof data.phoneNumber !== "string"
+    ) {
+      throw new Error("Phone number is required");
+    }
+
+    const phoneNumber = data.phoneNumber.trim();
+
+    if (!phoneNumber) {
+      throw new Error("Phone number cannot be empty");
+    }
+
+    let backupPhone: string | null = null;
+
+    if (
+      data.backupPhone !== undefined &&
+      data.backupPhone !== null
+    ) {
+      if (typeof data.backupPhone !== "string") {
+        throw new Error("Backup phone must be a string");
+      }
+
+      const trimmedBackupPhone = data.backupPhone.trim();
+
+      if (trimmedBackupPhone) {
+        backupPhone = trimmedBackupPhone;
+      }
+    }
+
+    if (
+      !data.shippingAddress ||
+      typeof data.shippingAddress !== "string"
+    ) {
+      throw new Error("Shipping address is required");
+    }
+
+    const shippingAddress = data.shippingAddress.trim();
+
+    if (!shippingAddress) {
+      throw new Error("Shipping address cannot be empty");
+    }
+
+    // =========================
+    // ITEMS VALIDATION
+    // =========================
+
     if (!data.items || !Array.isArray(data.items)) {
       throw new Error("Order items are required");
     }
@@ -24,6 +98,10 @@ export class OrderService {
     if (data.items.length === 0) {
       throw new Error("Order must contain at least one item");
     }
+
+    // =========================
+    // USER EXISTS
+    // =========================
 
     const user = await prisma.user.findUnique({
       where: {
@@ -35,21 +113,25 @@ export class OrderService {
       throw new Error("User not found");
     }
 
+    // =========================
+    // PRODUCT IDS
+    // =========================
+
     const productIds = data.items.map(
       (item: any) => item.productId
     );
 
-    const uniqueProductIds = [
-      ...new Set(productIds),
-    ];
+    const uniqueProductIds = [...new Set(productIds)];
 
-    if (
-      uniqueProductIds.length !== productIds.length
-    ) {
+    if (uniqueProductIds.length !== productIds.length) {
       throw new Error(
         "Duplicate products are not allowed in an order"
       );
     }
+
+    // =========================
+    // PRODUCTS
+    // =========================
 
     const products = await prisma.product.findMany({
       where: {
@@ -60,13 +142,15 @@ export class OrderService {
       },
     });
 
-    if (
-      products.length !== uniqueProductIds.length
-    ) {
+    if (products.length !== uniqueProductIds.length) {
       throw new Error(
         "One or more products not found or inactive"
       );
     }
+
+    // =========================
+    // ORDER ITEMS
+    // =========================
 
     const orderItems: any[] = [];
 
@@ -103,8 +187,7 @@ export class OrderService {
 
       const unitPrice = Number(product.price);
 
-      const subtotal =
-        unitPrice * item.quantity;
+      const subtotal = unitPrice * item.quantity;
 
       orderItems.push({
         productId: product.id,
@@ -116,21 +199,37 @@ export class OrderService {
       });
     }
 
+    // =========================
+    // TOTAL
+    // =========================
+
     const total = orderItems.reduce(
       (sum, item) => sum + item.subtotal,
       0
     );
+
+    // =========================
+    // ORDER NUMBER
+    // =========================
 
     const orderNumber =
       `ORD-${Date.now()}-${Math.floor(
         Math.random() * 1000
       )}`;
 
+    // =========================
+    // CREATE ORDER
+    // =========================
+
     return this.orderRepository.create(
       data.userId,
       orderNumber,
       orderItems,
-      total
+      total,
+      customerEmail,
+      phoneNumber,
+      backupPhone,
+      shippingAddress
     );
   }
 
@@ -185,5 +284,9 @@ export class OrderService {
       id,
       status
     );
+  }
+
+  private isValidEmail(email: string) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 }

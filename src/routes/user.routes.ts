@@ -3,8 +3,7 @@ import { UserController } from "../controllers/user.controller.js";
 
 const router = Router();
 
-const userController =
-  new UserController();
+const userController = new UserController();
 
 router.post(
   "/",
@@ -14,6 +13,17 @@ router.post(
 router.get(
   "/",
   userController.getUsers
+);
+
+router.get(
+  "/admins",
+  userController.getAdmins
+);
+
+// Super Admin: Demote Admin → Customer
+router.patch(
+  "/:id/demote",
+  userController.demoteAdmin
 );
 
 router.get(
