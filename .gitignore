@@ -1,5 +1,18 @@
-
-
 node_modules/
 .env
 /src/generated/prisma/
+
+# Build output
+/dist/
+
+# Temporary test scripts
+check-admins.ts
+check-order.ts
+make-admin-test.ts
+set-admin-password.ts
+
+# Temporary generated files
+ecommerce-source-code.zip
+source-code.txt
+source-code1.txt
+src-all.txt
