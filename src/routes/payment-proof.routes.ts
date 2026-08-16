@@ -1,20 +1,57 @@
 import { Router } from "express";
 import { PaymentProofController } from "../controllers/payment-proof.controller.js";
+import {
+  requireAuth,
+  requireRole,
+} from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-const controller = new PaymentProofController();
+const controller =
+  new PaymentProofController();
 
-router.post("/", controller.create);
+// Customer uploads proof
+router.post(
+  "/",
+  requireAuth,
+  controller.create
+);
 
-router.get("/", controller.getAll);
+// Admins can view all proofs
+router.get(
+  "/",
+  requireAuth,
+  requireRole("ADMIN", "SUPER_ADMIN"),
+  controller.getAll
+);
 
-router.get("/payment/:paymentId", controller.getByPaymentId);
+// Customer can access his proof
+router.get(
+  "/payment/:paymentId",
+  requireAuth,
+  controller.getByPaymentId
+);
 
-router.get("/:id", controller.getById);
+// Admins can inspect a specific proof
+router.get(
+  "/:id",
+  requireAuth,
+  requireRole("ADMIN", "SUPER_ADMIN"),
+  controller.getById
+);
 
-router.patch("/:id", controller.update);
+// Customer can update his proof
+router.patch(
+  "/:id",
+  requireAuth,
+  controller.update
+);
 
-router.delete("/:id", controller.delete);
+// Customer can delete his proof
+router.delete(
+  "/:id",
+  requireAuth,
+  controller.delete
+);
 
 export default router;

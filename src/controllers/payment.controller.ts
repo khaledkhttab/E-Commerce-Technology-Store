@@ -5,6 +5,7 @@ import type {
 
 import { PaymentService } from "../services/payment.service.js";
 import { PaymentResponse } from "../responses/payment.response.js";
+import type { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class PaymentController {
   private paymentService: PaymentService;
@@ -15,14 +16,15 @@ export class PaymentController {
   }
 
   createPayment = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
       const payment =
-        await this.paymentService.createPayment(
-          req.body
-        );
+  await this.paymentService.createPayment(
+    req.body,
+    req.user!.userId
+  );
 
       return res.status(201).json({
         success: true,

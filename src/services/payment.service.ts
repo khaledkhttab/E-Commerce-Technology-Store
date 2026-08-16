@@ -8,10 +8,20 @@ export class PaymentService {
     this.paymentRepository = new PaymentRepository();
   }
 
-  async createPayment(data: any) {
+  async createPayment(
+  data: any,
+  userId: number
+) {
     if (!data.orderId) {
       throw new Error("Order ID is required");
     }
+
+    if (
+  !Number.isInteger(userId) ||
+  userId <= 0
+) {
+  throw new Error("Invalid user ID");
+}
 
     if (
       !Number.isInteger(data.orderId) ||
@@ -38,14 +48,20 @@ export class PaymentService {
     }
 
     const order = await prisma.order.findUnique({
-      where: {
-        id: data.orderId,
-      },
-    });
+  where: {
+    id: data.orderId,
+  },
+});
 
     if (!order) {
       throw new Error("Order not found");
     }
+
+    if (order.userId !== userId) {
+  throw new Error(
+    "You are not allowed to create payment for this order"
+  );
+}
 
     const existingPayment =
       await this.paymentRepository.findByOrderId(

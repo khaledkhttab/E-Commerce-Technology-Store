@@ -1,4 +1,12 @@
-import type { Request, Response } from "express";
+import type {
+  Request,
+  Response,
+} from "express";
+
+import type {
+  AuthRequest,
+} from "../middlewares/auth.middleware.js";
+
 import { OrderService } from "../services/order.service.js";
 import { OrderResponse } from "../responses/order.respose.js";
 
@@ -10,13 +18,18 @@ export class OrderController {
   }
 
   createOrder = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
+      const userId = req.user!.userId;
+
       const order =
         await this.orderService.createOrder(
-          req.body
+          {
+            ...req.body,
+            userId,
+          }
         );
 
       return res.status(201).json({
@@ -29,14 +42,23 @@ export class OrderController {
   };
 
   getOrderById = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
       const id = Number(req.params.id);
 
+      const isAdmin =
+        req.user!.role === "ADMIN" ||
+        req.user!.role === "SUPER_ADMIN";
+
       const order =
-        await this.orderService.getOrderById(id);
+        await this.orderService.getOrderById(
+          id,
+          isAdmin
+            ? undefined
+            : req.user!.userId
+        );
 
       return res.status(200).json({
         success: true,
@@ -48,7 +70,7 @@ export class OrderController {
   };
 
   getOrders = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
@@ -65,17 +87,18 @@ export class OrderController {
   };
 
   updateOrderStatus = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
       const id = Number(req.params.id);
 
-      const order =
-        await this.orderService.updateOrderStatus(
-          id,
-          req.body.status
-        );
+     const order =
+  await this.orderService.updateOrderStatus(
+    id,
+    req.body.status,
+    req.user!.userId
+  );
 
       return res.status(200).json({
         success: true,

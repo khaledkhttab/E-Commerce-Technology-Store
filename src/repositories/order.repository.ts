@@ -86,10 +86,12 @@ export class OrderRepository {
   }
 
   async updateStatus(
-    id: number,
-    status: any
-  ) {
-    return prisma.order.update({
+  id: number,
+  status: any,
+  adminId: number
+) {
+  return prisma.$transaction(async (tx) => {
+    const order = await tx.order.update({
       where: {
         id,
       },
@@ -101,5 +103,17 @@ export class OrderRepository {
         payment: true,
       },
     });
-  }
+
+    await tx.orderStatusHistory.create({
+      data: {
+        orderId: id,
+        adminId,
+        status,
+      },
+    });
+
+    return order;
+  });
+}
+
 }

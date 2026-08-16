@@ -233,29 +233,40 @@ export class OrderService {
     );
   }
 
-  async getOrderById(id: number) {
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error("Invalid order ID");
-    }
-
-    const order =
-      await this.orderRepository.findById(id);
-
-    if (!order) {
-      throw new Error("Order not found");
-    }
-
-    return order;
+async getOrderById(
+  id: number,
+  userId?: number
+) {
+  if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("Invalid order ID");
   }
+
+  const order =
+    await this.orderRepository.findById(id);
+
+  if (!order) {
+    throw new Error("Order not found");
+  }
+
+  if (
+    userId !== undefined &&
+    order.userId !== userId
+  ) {
+    throw new Error("Order not found");
+  }
+
+  return order;
+}
 
   async getOrders() {
     return this.orderRepository.findMany();
   }
 
-  async updateOrderStatus(
-    id: number,
-    status: string
-  ) {
+ async updateOrderStatus(
+  id: number,
+  status: string,
+  adminId: number
+){
     if (!Number.isInteger(id) || id <= 0) {
       throw new Error("Invalid order ID");
     }
@@ -280,10 +291,11 @@ export class OrderService {
       throw new Error("Order not found");
     }
 
-    return this.orderRepository.updateStatus(
-      id,
-      status
-    );
+  return this.orderRepository.updateStatus(
+  id,
+  status,
+  adminId
+);
   }
 
   private isValidEmail(email: string) {
