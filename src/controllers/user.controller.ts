@@ -1,7 +1,12 @@
-import type { Request, Response } from "express";
+import type {
+  Request,
+  Response,
+} from "express";
+
+import type { AuthRequest } from "../middlewares/auth.middleware.js";
+
 import { UserService } from "../services/user.service.js";
 import { UserResponse } from "../responses/user.response.js";
-
 export class UserController {
   private userService: UserService;
 
@@ -79,18 +84,25 @@ export class UserController {
     }
   };
 
-  updateUser = async (
-    req: Request,
-    res: Response
-  ) => {
+ updateUser = async (
+  req: AuthRequest,
+  res: Response
+) => {
     try {
-      const id = Number(req.params.id);
+     const id = Number(req.params.id);
 
-      const user =
-        await this.userService.updateUser(
-          id,
-          req.body
-        );
+if (req.user!.userId !== id) {
+  return res.status(403).json({
+    success: false,
+    message: "You can only update your own account",
+  });
+}
+
+const user =
+  await this.userService.updateUser(
+    id,
+    req.body
+  );
 
       return res.status(200).json({
         success: true,
@@ -101,32 +113,31 @@ export class UserController {
     }
   };
 
-  demoteAdmin = async (
-    req: Request,
-    res: Response
-  ) => {
-    try {
-      const id = Number(req.params.id);
-      const requesterId = Number(
-        req.body.requesterId
+demoteAdmin = async (
+  req: AuthRequest,
+  res: Response
+) => {
+  try {
+    const id = Number(req.params.id);
+
+    const requesterId = req.user!.userId;
+
+    const user =
+      await this.userService.demoteAdmin(
+        id,
+        requesterId
       );
 
-      const user =
-        await this.userService.demoteAdmin(
-          id,
-          requesterId
-        );
-
-      return res.status(200).json({
-        success: true,
-        message:
-          "Admin demoted to customer successfully",
-        data: UserResponse.fromUser(user),
-      });
-    } catch (error: any) {
-      return this.handleError(res, error);
-    }
-  };
+    return res.status(200).json({
+      success: true,
+      message:
+        "Admin demoted to customer successfully",
+      data: UserResponse.fromUser(user),
+    });
+  } catch (error: any) {
+    return this.handleError(res, error);
+  }
+};
 
   private handleError(
     res: Response,

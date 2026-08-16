@@ -14,6 +14,7 @@ import productKeywordRoutes from "./routes/product-keyword.routes.js";
 import keywordRoutes from "./routes/keyword.routes.js";
 import paymentProofRoutes from "./routes/payment-proof.routes.js";
 import adminApplicationRoutes from "./routes/admin-application.routes.js";
+import authRoutes from "./routes/auth.routes.js";
 
 
 const app = express();
@@ -39,6 +40,10 @@ app.use("/payment-proofs", paymentProofRoutes);
 app.use(
   "/admin-applications",
   adminApplicationRoutes
+);
+app.use(
+  "/api/auth",
+  authRoutes
 );
 
 

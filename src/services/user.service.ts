@@ -194,21 +194,6 @@ export class UserService {
       updateData.email = email;
     }
 
-    if (data.role !== undefined) {
-      const validRoles = [
-        "CUSTOMER",
-        "ADMIN",
-        "SUPER_ADMIN",
-      ];
-
-      if (!validRoles.includes(data.role)) {
-        throw new Error(
-          "Invalid user role"
-        );
-      }
-
-      updateData.role = data.role;
-    }
 
     return this.userRepository.update(
       id,
