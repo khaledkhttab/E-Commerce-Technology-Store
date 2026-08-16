@@ -67,7 +67,8 @@ export class OrderService {
         throw new Error("Backup phone must be a string");
       }
 
-      const trimmedBackupPhone = data.backupPhone.trim();
+      const trimmedBackupPhone =
+        data.backupPhone.trim();
 
       if (trimmedBackupPhone) {
         backupPhone = trimmedBackupPhone;
@@ -81,22 +82,30 @@ export class OrderService {
       throw new Error("Shipping address is required");
     }
 
-    const shippingAddress = data.shippingAddress.trim();
+    const shippingAddress =
+      data.shippingAddress.trim();
 
     if (!shippingAddress) {
-      throw new Error("Shipping address cannot be empty");
+      throw new Error(
+        "Shipping address cannot be empty"
+      );
     }
 
     // =========================
     // ITEMS VALIDATION
     // =========================
 
-    if (!data.items || !Array.isArray(data.items)) {
+    if (
+      !data.items ||
+      !Array.isArray(data.items)
+    ) {
       throw new Error("Order items are required");
     }
 
     if (data.items.length === 0) {
-      throw new Error("Order must contain at least one item");
+      throw new Error(
+        "Order must contain at least one item"
+      );
     }
 
     // =========================
@@ -121,9 +130,14 @@ export class OrderService {
       (item: any) => item.productId
     );
 
-    const uniqueProductIds = [...new Set(productIds)];
+    const uniqueProductIds = [
+      ...new Set(productIds),
+    ];
 
-    if (uniqueProductIds.length !== productIds.length) {
+    if (
+      uniqueProductIds.length !==
+      productIds.length
+    ) {
       throw new Error(
         "Duplicate products are not allowed in an order"
       );
@@ -133,16 +147,20 @@ export class OrderService {
     // PRODUCTS
     // =========================
 
-    const products = await prisma.product.findMany({
-      where: {
-        id: {
-          in: uniqueProductIds as number[],
+    const products =
+      await prisma.product.findMany({
+        where: {
+          id: {
+            in: uniqueProductIds as number[],
+          },
+          isActive: true,
         },
-        isActive: true,
-      },
-    });
+      });
 
-    if (products.length !== uniqueProductIds.length) {
+    if (
+      products.length !==
+      uniqueProductIds.length
+    ) {
       throw new Error(
         "One or more products not found or inactive"
       );
@@ -176,18 +194,25 @@ export class OrderService {
       );
 
       if (!product) {
-        throw new Error("Product not found");
+        throw new Error(
+          "Product not found"
+        );
       }
 
-      if (product.stockQuantity < item.quantity) {
+      if (
+        product.stockQuantity <
+        item.quantity
+      ) {
         throw new Error(
           `Insufficient stock for product: ${product.name}`
         );
       }
 
-      const unitPrice = Number(product.price);
+      const unitPrice =
+        Number(product.price);
 
-      const subtotal = unitPrice * item.quantity;
+      const subtotal =
+        unitPrice * item.quantity;
 
       orderItems.push({
         productId: product.id,
@@ -203,10 +228,12 @@ export class OrderService {
     // TOTAL
     // =========================
 
-    const total = orderItems.reduce(
-      (sum, item) => sum + item.subtotal,
-      0
-    );
+    const total =
+      orderItems.reduce(
+        (sum, item) =>
+          sum + item.subtotal,
+        0
+      );
 
     // =========================
     // ORDER NUMBER
@@ -233,43 +260,79 @@ export class OrderService {
     );
   }
 
-async getOrderById(
-  id: number,
-  userId?: number
-) {
-  if (!Number.isInteger(id) || id <= 0) {
-    throw new Error("Invalid order ID");
-  }
+  // =========================
+  // GET ORDER BY ID
+  // =========================
 
-  const order =
-    await this.orderRepository.findById(id);
-
-  if (!order) {
-    throw new Error("Order not found");
-  }
-
-  if (
-    userId !== undefined &&
-    order.userId !== userId
+  async getOrderById(
+    id: number,
+    userId?: number
   ) {
-    throw new Error("Order not found");
+    if (
+      !Number.isInteger(id) ||
+      id <= 0
+    ) {
+      throw new Error(
+        "Invalid order ID"
+      );
+    }
+
+    const order =
+      await this.orderRepository.findById(
+        id
+      );
+
+    if (!order) {
+      throw new Error(
+        "Order not found"
+      );
+    }
+
+    if (
+      userId !== undefined &&
+      order.userId !== userId
+    ) {
+      throw new Error(
+        "Order not found"
+      );
+    }
+
+    return order;
   }
 
-  return order;
-}
+  // =========================
+  // GET ALL ORDERS
+  // =========================
 
   async getOrders() {
     return this.orderRepository.findMany();
   }
 
- async updateOrderStatus(
-  id: number,
-  status: string,
-  adminId: number
-){
-    if (!Number.isInteger(id) || id <= 0) {
-      throw new Error("Invalid order ID");
+  // =========================
+  // UPDATE ORDER STATUS
+  // =========================
+
+  async updateOrderStatus(
+    id: number,
+    status: string,
+    adminId: number
+  ) {
+    // =========================
+    // ID VALIDATION
+    // =========================
+
+    if (
+      !Number.isInteger(id) ||
+      id <= 0
+    ) {
+      throw new Error(
+        "Invalid order ID"
+      );
     }
+
+    // =========================
+    // STATUS VALIDATION
+    // =========================
 
     const validStatuses = [
       "PENDING",
@@ -280,25 +343,118 @@ async getOrderById(
       "CANCELLED",
     ];
 
-    if (!validStatuses.includes(status)) {
-      throw new Error("Invalid order status");
+    if (
+      !validStatuses.includes(status)
+    ) {
+      throw new Error(
+        "Invalid order status"
+      );
     }
+
+    // =========================
+    // ADMIN VALIDATION
+    // =========================
+
+    if (
+      !Number.isInteger(adminId) ||
+      adminId <= 0
+    ) {
+      throw new Error(
+        "Invalid admin ID"
+      );
+    }
+
+    // =========================
+    // GET ORDER
+    // =========================
 
     const order =
-      await this.orderRepository.findById(id);
+      await this.orderRepository.findById(
+        id
+      );
 
     if (!order) {
-      throw new Error("Order not found");
+      throw new Error(
+        "Order not found"
+      );
     }
 
-  return this.orderRepository.updateStatus(
-  id,
-  status,
-  adminId
-);
+    // =========================
+    // PREVENT SAME STATUS
+    // =========================
+
+    if (order.status === status) {
+      throw new Error(
+        `Order is already ${status}`
+      );
+    }
+
+    // =========================
+    // ORDER STATUS TRANSITIONS
+    // =========================
+
+    const allowedTransitions: Record<
+      string,
+      string[]
+    > = {
+      PENDING: [
+        "CONFIRMED",
+        "CANCELLED",
+      ],
+
+      CONFIRMED: [
+        "PROCESSING",
+        "CANCELLED",
+      ],
+
+      PROCESSING: [
+        "SHIPPED",
+      ],
+
+      SHIPPED: [
+        "DELIVERED",
+      ],
+
+      DELIVERED: [],
+
+      CANCELLED: [],
+    };
+
+    const allowedNextStatuses =
+      allowedTransitions[
+        order.status
+      ];
+
+    if (
+      !allowedNextStatuses.includes(
+        status
+      )
+    ) {
+      throw new Error(
+        `Invalid order status transition from ${order.status} to ${status}`
+      );
+    }
+
+    // =========================
+    // UPDATE STATUS
+    // =========================
+
+    return this.orderRepository.updateStatus(
+      id,
+      status,
+      adminId
+    );
   }
 
-  private isValidEmail(email: string) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  // =========================
+  // EMAIL VALIDATION
+  // =========================
+
+  private isValidEmail(
+    email: string
+  ) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+      email
+    );
   }
 }

@@ -1,5 +1,4 @@
 import type {
-  Request,
   Response,
 } from "express";
 
@@ -21,10 +20,10 @@ export class PaymentController {
   ) => {
     try {
       const payment =
-  await this.paymentService.createPayment(
-    req.body,
-    req.user!.userId
-  );
+        await this.paymentService.createPayment(
+          req.body,
+          req.user!.userId
+        );
 
       return res.status(201).json({
         success: true,
@@ -41,7 +40,7 @@ export class PaymentController {
   };
 
   getPaymentById = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
@@ -49,9 +48,16 @@ export class PaymentController {
         req.params.id
       );
 
+      const isAdmin =
+        req.user!.role === "ADMIN" ||
+        req.user!.role === "SUPER_ADMIN";
+
       const payment =
         await this.paymentService.getPaymentById(
-          id
+          id,
+          isAdmin
+            ? undefined
+            : req.user!.userId
         );
 
       return res.status(200).json({
@@ -69,7 +75,7 @@ export class PaymentController {
   };
 
   getPayments = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {
@@ -91,7 +97,7 @@ export class PaymentController {
   };
 
   updatePaymentStatus = async (
-    req: Request,
+    req: AuthRequest,
     res: Response
   ) => {
     try {

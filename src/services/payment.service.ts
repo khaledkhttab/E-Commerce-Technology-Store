@@ -9,19 +9,19 @@ export class PaymentService {
   }
 
   async createPayment(
-  data: any,
-  userId: number
-) {
+    data: any,
+    userId: number
+  ) {
     if (!data.orderId) {
       throw new Error("Order ID is required");
     }
 
     if (
-  !Number.isInteger(userId) ||
-  userId <= 0
-) {
-  throw new Error("Invalid user ID");
-}
+      !Number.isInteger(userId) ||
+      userId <= 0
+    ) {
+      throw new Error("Invalid user ID");
+    }
 
     if (
       !Number.isInteger(data.orderId) ||
@@ -42,26 +42,31 @@ export class PaymentService {
     ];
 
     if (
-      !validMethods.includes(data.paymentMethod)
+      !validMethods.includes(
+        data.paymentMethod
+      )
     ) {
-      throw new Error("Invalid payment method");
+      throw new Error(
+        "Invalid payment method"
+      );
     }
 
-    const order = await prisma.order.findUnique({
-  where: {
-    id: data.orderId,
-  },
-});
+    const order =
+      await prisma.order.findUnique({
+        where: {
+          id: data.orderId,
+        },
+      });
 
     if (!order) {
       throw new Error("Order not found");
     }
 
     if (order.userId !== userId) {
-  throw new Error(
-    "You are not allowed to create payment for this order"
-  );
-}
+      throw new Error(
+        "You are not allowed to create payment for this order"
+      );
+    }
 
     const existingPayment =
       await this.paymentRepository.findByOrderId(
@@ -77,9 +82,11 @@ export class PaymentService {
     let paymentStatus = "PENDING";
 
     if (
-      data.paymentMethod === "BANK_TRANSFER"
+      data.paymentMethod ===
+      "BANK_TRANSFER"
     ) {
-      paymentStatus = "PENDING_VERIFICATION";
+      paymentStatus =
+        "PENDING_VERIFICATION";
     }
 
     return this.paymentRepository.create(
@@ -89,19 +96,37 @@ export class PaymentService {
     );
   }
 
-  async getPaymentById(id: number) {
+  async getPaymentById(
+    id: number,
+    userId?: number
+  ) {
     if (
       !Number.isInteger(id) ||
       id <= 0
     ) {
-      throw new Error("Invalid payment ID");
+      throw new Error(
+        "Invalid payment ID"
+      );
     }
 
     const payment =
-      await this.paymentRepository.findById(id);
+      await this.paymentRepository.findById(
+        id
+      );
 
     if (!payment) {
-      throw new Error("Payment not found");
+      throw new Error(
+        "Payment not found"
+      );
+    }
+
+    if (
+      userId !== undefined &&
+      payment.order.userId !== userId
+    ) {
+      throw new Error(
+        "Payment not found"
+      );
     }
 
     return payment;
@@ -119,7 +144,9 @@ export class PaymentService {
       !Number.isInteger(id) ||
       id <= 0
     ) {
-      throw new Error("Invalid payment ID");
+      throw new Error(
+        "Invalid payment ID"
+      );
     }
 
     const validStatuses = [
@@ -130,7 +157,9 @@ export class PaymentService {
     ];
 
     if (
-      !validStatuses.includes(paymentStatus)
+      !validStatuses.includes(
+        paymentStatus
+      )
     ) {
       throw new Error(
         "Invalid payment status"
@@ -138,14 +167,19 @@ export class PaymentService {
     }
 
     const payment =
-      await this.paymentRepository.findById(id);
+      await this.paymentRepository.findById(
+        id
+      );
 
     if (!payment) {
-      throw new Error("Payment not found");
+      throw new Error(
+        "Payment not found"
+      );
     }
 
     if (
-      payment.paymentStatus === "VERIFIED" &&
+      payment.paymentStatus ===
+        "VERIFIED" &&
       paymentStatus !== "VERIFIED"
     ) {
       throw new Error(
