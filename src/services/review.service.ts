@@ -8,13 +8,26 @@ export class ReviewService {
     this.reviewRepository = new ReviewRepository();
   }
 
-  async createReview(data: any) {
-    if (!data.userId) {
-      throw new Error("User ID is required");
+  async createReview(
+    data: any,
+    userId: number
+  ) {
+    if (
+      !Number.isInteger(userId) ||
+      userId <= 0
+    ) {
+      throw new Error("Invalid user ID");
     }
 
     if (!data.productId) {
       throw new Error("Product ID is required");
+    }
+
+    if (
+      !Number.isInteger(data.productId) ||
+      data.productId <= 0
+    ) {
+      throw new Error("Invalid product ID");
     }
 
     if (data.rating === undefined) {
@@ -39,21 +52,23 @@ export class ReviewService {
       throw new Error("Comment is required");
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: data.userId,
-      },
-    });
+    const user =
+      await prisma.user.findUnique({
+        where: {
+          id: userId,
+        },
+      });
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    const product = await prisma.product.findUnique({
-      where: {
-        id: data.productId,
-      },
-    });
+    const product =
+      await prisma.product.findUnique({
+        where: {
+          id: data.productId,
+        },
+      });
 
     if (!product) {
       throw new Error("Product not found");
@@ -65,7 +80,7 @@ export class ReviewService {
 
     const existingReview =
       await this.reviewRepository.findByUserAndProduct(
-        data.userId,
+        userId,
         data.productId
       );
 
@@ -75,7 +90,12 @@ export class ReviewService {
       );
     }
 
-    return this.reviewRepository.create(data);
+    return this.reviewRepository.create({
+      userId,
+      productId: data.productId,
+      rating: data.rating,
+      comment: data.comment.trim(),
+    });
   }
 
   async getReviews() {
@@ -97,9 +117,20 @@ export class ReviewService {
     return review;
   }
 
-  async updateReview(id: number, data: any) {
+  async updateReview(
+    id: number,
+    data: any,
+    userId: number
+  ) {
     if (!Number.isInteger(id) || id <= 0) {
       throw new Error("Invalid review ID");
+    }
+
+    if (
+      !Number.isInteger(userId) ||
+      userId <= 0
+    ) {
+      throw new Error("Invalid user ID");
     }
 
     const review =
@@ -107,6 +138,12 @@ export class ReviewService {
 
     if (!review) {
       throw new Error("Review not found");
+    }
+
+    if (review.userId !== userId) {
+      throw new Error(
+        "You are not allowed to update this review"
+      );
     }
 
     if (data.rating !== undefined) {
@@ -126,8 +163,12 @@ export class ReviewService {
         typeof data.comment !== "string" ||
         data.comment.trim().length === 0
       ) {
-        throw new Error("Comment cannot be empty");
+        throw new Error(
+          "Comment cannot be empty"
+        );
       }
+
+      data.comment = data.comment.trim();
     }
 
     return this.reviewRepository.update(
@@ -136,9 +177,19 @@ export class ReviewService {
     );
   }
 
-  async deleteReview(id: number) {
+  async deleteReview(
+    id: number,
+    userId: number
+  ) {
     if (!Number.isInteger(id) || id <= 0) {
       throw new Error("Invalid review ID");
+    }
+
+    if (
+      !Number.isInteger(userId) ||
+      userId <= 0
+    ) {
+      throw new Error("Invalid user ID");
     }
 
     const review =
@@ -146,6 +197,12 @@ export class ReviewService {
 
     if (!review) {
       throw new Error("Review not found");
+    }
+
+    if (review.userId !== userId) {
+      throw new Error(
+        "You are not allowed to delete this review"
+      );
     }
 
     return this.reviewRepository.delete(id);

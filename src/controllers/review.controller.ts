@@ -5,6 +5,7 @@ import type {
 
 import { ReviewService } from "../services/review.service.js";
 import { ReviewResponse } from "../responses/review.response.js";
+import type { AuthRequest } from "../middlewares/auth.middleware.js";
 
 export class ReviewController {
   private reviewService: ReviewService;
@@ -13,24 +14,28 @@ export class ReviewController {
     this.reviewService = new ReviewService();
   }
 
-  createReview = async (
-    req: Request,
-    res: Response
-  ) => {
-    try {
-      const review =
-        await this.reviewService.createReview(
-          req.body
-        );
+ createReview = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const authReq =
+      req as AuthRequest;
 
-      return res.status(201).json({
-        success: true,
-        data: ReviewResponse.fromReview(review),
-      });
-    } catch (error: any) {
-      return this.handleError(res, error);
-    }
-  };
+    const review =
+      await this.reviewService.createReview(
+        req.body,
+        authReq.user!.userId
+      );
+
+    return res.status(201).json({
+      success: true,
+      data: ReviewResponse.fromReview(review),
+    });
+  } catch (error: any) {
+    return this.handleError(res, error);
+  }
+};
 
   getReviews = async (
     req: Request,
@@ -71,44 +76,54 @@ export class ReviewController {
   };
 
   updateReview = async (
-    req: Request,
-    res: Response
-  ) => {
-    try {
-      const id = Number(req.params.id);
+  req: Request,
+  res: Response
+) => {
+  try {
+    const authReq =
+      req as AuthRequest;
 
-      const review =
-        await this.reviewService.updateReview(
-          id,
-          req.body
-        );
+    const id = Number(req.params.id);
 
-      return res.status(200).json({
-        success: true,
-        data: ReviewResponse.fromReview(review),
-      });
-    } catch (error: any) {
-      return this.handleError(res, error);
-    }
-  };
+    const review =
+      await this.reviewService.updateReview(
+        id,
+        req.body,
+        authReq.user!.userId
+      );
+
+    return res.status(200).json({
+      success: true,
+      data: ReviewResponse.fromReview(review),
+    });
+  } catch (error: any) {
+    return this.handleError(res, error);
+  }
+};
 
   deleteReview = async (
-    req: Request,
-    res: Response
-  ) => {
-    try {
-      const id = Number(req.params.id);
+  req: Request,
+  res: Response
+) => {
+  try {
+    const authReq =
+      req as AuthRequest;
 
-      await this.reviewService.deleteReview(id);
+    const id = Number(req.params.id);
 
-      return res.status(200).json({
-        success: true,
-        message: "Review deleted successfully",
-      });
-    } catch (error: any) {
-      return this.handleError(res, error);
-    }
-  };
+    await this.reviewService.deleteReview(
+      id,
+      authReq.user!.userId
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Review deleted successfully",
+    });
+  } catch (error: any) {
+    return this.handleError(res, error);
+  }
+};
 
   private handleError(
     res: Response,
