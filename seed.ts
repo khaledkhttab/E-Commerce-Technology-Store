@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "./src/generated/prisma/client.js";
+import { hashPassword } from "./src/utils/password.util.js";
 
 const connectionString = process.env.DATABASE_URL;
 
@@ -37,7 +38,9 @@ async function main() {
   await prisma.keyword.deleteMany();
   await prisma.brand.deleteMany();
   await prisma.category.deleteMany();
+ await prisma.adminApplication.deleteMany();
   await prisma.user.deleteMany();
+
 
   // ------------------------------------------------------------
   // USERS: 100 customers + 15 admins + 3 super admins = 118
@@ -62,14 +65,30 @@ async function main() {
     })),
   });
 
-  const superAdmins = await prisma.user.createManyAndReturn({
-    data: Array.from({ length: 3 }, (_, i) => ({
-      name: `Super Admin ${i + 1}`,
-      role: "SUPER_ADMIN" as const,
-      email: `superadmin${i + 1}@example.com`,
-      password: `hashed_super_${i + 1}`,
-    })),
-  });
+ const superAdminPassword = await hashPassword("12345678");
+
+const superAdmins = await prisma.user.createManyAndReturn({
+  data: [
+    {
+      name: "Super Admin",
+      role: "SUPER_ADMIN",
+      email: "superadmin@test.com",
+      password: superAdminPassword,
+    },
+    {
+      name: "Super Admin 2",
+      role: "SUPER_ADMIN",
+      email: "superadmin2@example.com",
+      password: superAdminPassword,
+    },
+    {
+      name: "Super Admin 3",
+      role: "SUPER_ADMIN",
+      email: "superadmin3@example.com",
+      password: superAdminPassword,
+    },
+  ],
+});
 
   const allAdmins = [...admins, ...superAdmins];
 

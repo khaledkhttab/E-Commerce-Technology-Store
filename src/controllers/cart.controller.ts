@@ -11,7 +11,7 @@ export class CartController {
 
   async getCart(req: Request, res: Response) {
     try {
-      const userId = Number((req as any).user.id);
+      const userId = Number((req as any).user.userId);
 
       const cart = await this.cartService.getCart(userId);
 
@@ -29,7 +29,7 @@ export class CartController {
 
   async addProductToCart(req: Request, res: Response) {
     try {
-      const userId = Number((req as any).user.id);
+      const userId = Number((req as any).user.userId);
       const productId = Number(req.body.productId);
       const quantity = Number(req.body.quantity);
 
@@ -54,8 +54,7 @@ export class CartController {
 
   async updateCartItem(req: Request, res: Response) {
     try {
-      const userId = Number((req as any).user.id);
-      const productId = Number(req.params.productId);
+const userId = Number((req as any).user.userId);      const productId = Number(req.params.productId);
       const quantity = Number(req.body.quantity);
 
       const cartItem = await this.cartService.updateCartItem(
@@ -79,7 +78,7 @@ export class CartController {
 
   async removeProductFromCart(req: Request, res: Response) {
     try {
-      const userId = Number((req as any).user.id);
+const userId = Number((req as any).user.userId);
       const productId = Number(req.params.productId);
 
       await this.cartService.removeProductFromCart(
@@ -101,8 +100,7 @@ export class CartController {
 
   async clearCart(req: Request, res: Response) {
     try {
-      const userId = Number((req as any).user.id);
-
+const userId = Number((req as any).user.userId);
       await this.cartService.clearCart(userId);
 
       return res.status(200).json({

@@ -32,6 +32,16 @@ export class BrandRepository {
     });
   }
 
+  async hasProducts(id: number) {
+    const count = await prisma.product.count({
+      where: {
+        brandId: id,
+      },
+    });
+
+    return count > 0;
+  }
+
   async delete(id: number) {
     return prisma.brand.delete({
       where: { id },

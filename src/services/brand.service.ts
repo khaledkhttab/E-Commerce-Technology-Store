@@ -44,12 +44,22 @@ export class BrandService {
   }
 
   async deleteBrand(id: number) {
-    const brand = await this.brandRepository.findById(id);
+  const brand =
+    await this.brandRepository.findById(id);
 
-    if (!brand) {
-      throw new Error("Brand not found");
-    }
-
-    return this.brandRepository.delete(id);
+  if (!brand) {
+    throw new Error("Brand not found");
   }
+
+  const hasProducts =
+    await this.brandRepository.hasProducts(id);
+
+  if (hasProducts) {
+    throw new Error(
+      "Cannot delete brand because it is associated with products"
+    );
+  }
+
+  return this.brandRepository.delete(id);
+}
 }

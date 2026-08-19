@@ -24,6 +24,12 @@ router.get(
 );
 
 router.get(
+  "/my-orders",
+  requireAuth,
+  orderController.getMyOrders
+);
+
+router.get(
   "/:id",
   requireAuth,
   orderController.getOrderById

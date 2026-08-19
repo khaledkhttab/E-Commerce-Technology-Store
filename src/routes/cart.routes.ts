@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { CartController } from "../controllers/cart.controller.js";
-import { testAuth } from "../middlewares/test-auth.middleware.js";
+import { requireAuth } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
@@ -8,31 +8,31 @@ const cartController = new CartController();
 
 router.get(
   "/",
-  testAuth,
+  requireAuth,
   cartController.getCart.bind(cartController)
 );
 
 router.post(
   "/items",
-  testAuth,
+  requireAuth,
   cartController.addProductToCart.bind(cartController)
 );
 
 router.patch(
   "/items/:productId",
-  testAuth,
+  requireAuth,
   cartController.updateCartItem.bind(cartController)
 );
 
 router.delete(
   "/items/:productId",
-  testAuth,
+  requireAuth,
   cartController.removeProductFromCart.bind(cartController)
 );
 
 router.delete(
   "/",
-  testAuth,
+  requireAuth,
   cartController.clearCart.bind(cartController)
 );
 

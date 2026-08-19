@@ -14,6 +14,15 @@ export class ProductService {
   }
 
   async createProduct(data: any) {
+
+    if (
+  !data.name ||
+  typeof data.name !== "string" ||
+  !data.name.trim()
+) {
+  throw new Error("Product name is required");
+}
+
     if (data.price <= 0) {
       throw new Error("Product price must be greater than 0");
     }
@@ -44,6 +53,9 @@ export class ProductService {
   }
 
   async getProductById(id: number) {
+     if (!Number.isInteger(id) || id <= 0) {
+    throw new Error("Invalid product ID");
+  }
     const product = await this.productRepository.findById(id);
 
     if (!product) {

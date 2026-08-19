@@ -138,6 +138,13 @@ export class ProductController {
         ? error.message
         : "Internal server error";
 
+        if (message === "Invalid product ID") {
+  return res.status(400).json({
+    success: false,
+    message,
+  });
+}
+
     if (
       message === "Product not found" ||
       message === "Brand not found" ||

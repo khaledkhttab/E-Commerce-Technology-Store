@@ -1,5 +1,4 @@
 import type {
-  Request,
   Response,
 } from "express";
 
@@ -17,6 +16,10 @@ export class OrderController {
     this.orderService = new OrderService();
   }
 
+  // =========================
+  // CREATE ORDER
+  // =========================
+
   createOrder = async (
     req: AuthRequest,
     res: Response
@@ -25,12 +28,10 @@ export class OrderController {
       const userId = req.user!.userId;
 
       const order =
-        await this.orderService.createOrder(
-          {
-            ...req.body,
-            userId,
-          }
-        );
+        await this.orderService.createOrder({
+          ...req.body,
+          userId,
+        });
 
       return res.status(201).json({
         success: true,
@@ -40,6 +41,35 @@ export class OrderController {
       return this.handleError(res, error);
     }
   };
+
+  // =========================
+  // GET MY ORDERS
+  // =========================
+
+  getMyOrders = async (
+    req: AuthRequest,
+    res: Response
+  ) => {
+    try {
+      const userId = req.user!.userId;
+
+      const orders =
+        await this.orderService.getOrdersByUser(
+          userId
+        );
+
+      return res.status(200).json({
+        success: true,
+        data: OrderResponse.fromOrders(orders),
+      });
+    } catch (error: any) {
+      return this.handleError(res, error);
+    }
+  };
+
+  // =========================
+  // GET ORDER BY ID
+  // =========================
 
   getOrderById = async (
     req: AuthRequest,
@@ -69,6 +99,10 @@ export class OrderController {
     }
   };
 
+  // =========================
+  // GET ALL ORDERS
+  // =========================
+
   getOrders = async (
     req: AuthRequest,
     res: Response
@@ -86,6 +120,10 @@ export class OrderController {
     }
   };
 
+  // =========================
+  // UPDATE ORDER STATUS
+  // =========================
+
   updateOrderStatus = async (
     req: AuthRequest,
     res: Response
@@ -93,12 +131,12 @@ export class OrderController {
     try {
       const id = Number(req.params.id);
 
-     const order =
-  await this.orderService.updateOrderStatus(
-    id,
-    req.body.status,
-    req.user!.userId
-  );
+      const order =
+        await this.orderService.updateOrderStatus(
+          id,
+          req.body.status,
+          req.user!.userId
+        );
 
       return res.status(200).json({
         success: true,
@@ -108,6 +146,10 @@ export class OrderController {
       return this.handleError(res, error);
     }
   };
+
+  // =========================
+  // ERROR HANDLER
+  // =========================
 
   private handleError(
     res: Response,

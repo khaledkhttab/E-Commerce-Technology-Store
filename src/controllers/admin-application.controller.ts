@@ -10,6 +10,9 @@ import {
 import {
   AdminApplicationResponse,
 } from "../responses/admin-application.response.js";
+import type { AuthRequest } from "../middlewares/auth.middleware.js";
+
+
 
 export class AdminApplicationController {
   private adminApplicationService:
@@ -20,31 +23,32 @@ export class AdminApplicationController {
       new AdminApplicationService();
   }
 
-  createApplication = async (
-    req: Request,
-    res: Response
-  ) => {
-    try {
-      const userId = Number(req.body.userId);
+ createApplication = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const authReq =
+      req as AuthRequest;
 
-      const application =
-        await this.adminApplicationService.createApplication(
-          userId
-        );
+    const application =
+      await this.adminApplicationService.createApplication(
+        authReq.user!.userId
+      );
 
-      return res.status(201).json({
-        success: true,
-        message:
-          "Admin application submitted successfully",
-        data:
-          AdminApplicationResponse.fromApplication(
-            application
-          ),
-      });
-    } catch (error: any) {
-      return this.handleError(res, error);
-    }
-  };
+    return res.status(201).json({
+      success: true,
+      message:
+        "Admin application submitted successfully",
+      data:
+        AdminApplicationResponse.fromApplication(
+          application
+        ),
+    });
+  } catch (error: any) {
+    return this.handleError(res, error);
+  }
+};
 
   getApplicationById = async (
     req: Request,
@@ -133,42 +137,43 @@ export class AdminApplicationController {
       return this.handleError(res, error);
     }
   };
-
   reviewApplication = async (
-    req: Request,
-    res: Response
-  ) => {
-    try {
-      const applicationId =
-        Number(req.params.id);
+  req: Request,
+  res: Response
+) => {
+  try {
+    const authReq =
+      req as AuthRequest;
 
-      const {
-        reviewerId,
+    const applicationId =
+      Number(req.params.id);
+
+    const {
+      status,
+      rejectionReason,
+    } = req.body;
+
+    const application =
+      await this.adminApplicationService.reviewApplication(
+        applicationId,
+        authReq.user!.userId,
         status,
-        rejectionReason,
-      } = req.body;
+        rejectionReason
+      );
 
-      const application =
-        await this.adminApplicationService.reviewApplication(
-          applicationId,
-          Number(reviewerId),
-          status,
-          rejectionReason
-        );
-
-      return res.status(200).json({
-        success: true,
-        message:
-          `Admin application ${status.toLowerCase()} successfully`,
-        data:
-          AdminApplicationResponse.fromApplication(
-            application
-          ),
-      });
-    } catch (error: any) {
-      return this.handleError(res, error);
-    }
-  };
+    return res.status(200).json({
+      success: true,
+      message:
+        `Admin application ${status.toLowerCase()} successfully`,
+      data:
+        AdminApplicationResponse.fromApplication(
+          application
+        ),
+    });
+  } catch (error: any) {
+    return this.handleError(res, error);
+  }
+};
 
   private handleError(
     res: Response,

@@ -8,6 +8,10 @@ export class OrderService {
     this.orderRepository = new OrderRepository();
   }
 
+  // =========================
+  // CREATE ORDER
+  // =========================
+
   async createOrder(data: any) {
     // =========================
     // USER VALIDATION
@@ -17,7 +21,10 @@ export class OrderService {
       throw new Error("User ID is required");
     }
 
-    if (!Number.isInteger(data.userId) || data.userId <= 0) {
+    if (
+      !Number.isInteger(data.userId) ||
+      data.userId <= 0
+    ) {
       throw new Error("Invalid user ID");
     }
 
@@ -32,16 +39,21 @@ export class OrderService {
       throw new Error("Customer email is required");
     }
 
-    const customerEmail = data.customerEmail
-      .trim()
-      .toLowerCase();
+    const customerEmail =
+      data.customerEmail
+        .trim()
+        .toLowerCase();
 
     if (!customerEmail) {
-      throw new Error("Customer email cannot be empty");
+      throw new Error(
+        "Customer email cannot be empty"
+      );
     }
 
     if (!this.isValidEmail(customerEmail)) {
-      throw new Error("Invalid customer email format");
+      throw new Error(
+        "Invalid customer email format"
+      );
     }
 
     if (
@@ -51,10 +63,13 @@ export class OrderService {
       throw new Error("Phone number is required");
     }
 
-    const phoneNumber = data.phoneNumber.trim();
+    const phoneNumber =
+      data.phoneNumber.trim();
 
     if (!phoneNumber) {
-      throw new Error("Phone number cannot be empty");
+      throw new Error(
+        "Phone number cannot be empty"
+      );
     }
 
     let backupPhone: string | null = null;
@@ -63,8 +78,12 @@ export class OrderService {
       data.backupPhone !== undefined &&
       data.backupPhone !== null
     ) {
-      if (typeof data.backupPhone !== "string") {
-        throw new Error("Backup phone must be a string");
+      if (
+        typeof data.backupPhone !== "string"
+      ) {
+        throw new Error(
+          "Backup phone must be a string"
+        );
       }
 
       const trimmedBackupPhone =
@@ -79,7 +98,9 @@ export class OrderService {
       !data.shippingAddress ||
       typeof data.shippingAddress !== "string"
     ) {
-      throw new Error("Shipping address is required");
+      throw new Error(
+        "Shipping address is required"
+      );
     }
 
     const shippingAddress =
@@ -99,7 +120,9 @@ export class OrderService {
       !data.items ||
       !Array.isArray(data.items)
     ) {
-      throw new Error("Order items are required");
+      throw new Error(
+        "Order items are required"
+      );
     }
 
     if (data.items.length === 0) {
@@ -177,7 +200,9 @@ export class OrderService {
         !Number.isInteger(item.productId) ||
         item.productId <= 0
       ) {
-        throw new Error("Invalid product ID");
+        throw new Error(
+          "Invalid product ID"
+        );
       }
 
       if (
@@ -257,6 +282,27 @@ export class OrderService {
       phoneNumber,
       backupPhone,
       shippingAddress
+    );
+  }
+
+  // =========================
+  // GET MY ORDERS
+  // =========================
+
+  async getOrdersByUser(
+    userId: number
+  ) {
+    if (
+      !Number.isInteger(userId) ||
+      userId <= 0
+    ) {
+      throw new Error(
+        "Invalid user ID"
+      );
+    }
+
+    return this.orderRepository.findByUserId(
+      userId
     );
   }
 
